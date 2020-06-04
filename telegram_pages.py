@@ -4,7 +4,6 @@ import datetime
 import telegramcalendar
 import user_state
 from db_helper import db_helper
-import callback_data
 from google_sheets_helper import gsh_helper
 
 record_dict = {}
@@ -17,7 +16,7 @@ class Message:
         self.markup = markup
 
 
-def start(chat_id):
+def start():
     message_text = 'Введите номер телефона:'
     new_message = Message(message_text=message_text, markup='')
     return new_message
@@ -38,11 +37,19 @@ def create_main_menu(message=None, call=None):
         raise Exception('Один из параметров message/call должен быть not None')
     if call is not None:
         message = call.message
-    chat_id = message
+    try:
+        chat_id = message.chat.id
+
+    except AttributeError:
+        chat_id = message
+
     if not db_helper.check_user_existence(chat_id):
         db_helper.create_user(message=message)
+
+    user_name = db_helper.get_user_name_with_chat_id(chat_id)
+    record_to_dict(chat_id, 'fio', user_name)
     markup = types.InlineKeyboardMarkup()
-    message_text = 'Главное меню:'
+    message_text = user_name + '\nГлавное меню:'
 
     text = 'Внести трудозатраты'
     markup.row(types.InlineKeyboardButton(text, callback_data=CALLBACK_DATA['Внести трудозатраты']))
@@ -52,7 +59,9 @@ def create_main_menu(message=None, call=None):
 
     text = 'Текущий проект'
     markup.row(types.InlineKeyboardButton(text, callback_data=CALLBACK_DATA['Текущий проект']))
+
     new_message = Message(message_text=message_text, markup=markup)
+
     return new_message
 
 
@@ -109,7 +118,7 @@ def input_release(chat_id, tt_name):
 def verify_number_phone(chat_id, number_phone):
     certified_users_dict = db_helper.get_certified_users_dict(chat_id, number_phone)
     if certified_users_dict == 0:
-        message_text = 'Указанный номер отсутствует в БД. Может опечатка. Попробуйте еще:)'
+        message_text = 'Указанный номер отсутствует в БД'
         user_state.set_user_state(user_id=chat_id, state=CALLBACK_DATA['Старт'])
         new_message = Message(message_text=message_text, markup='')
     else:
@@ -131,13 +140,19 @@ def input_time(chat_id, time):
     markup = types.InlineKeyboardMarkup()
     message_text = 'Количество артефактов:'
     markup.row(types.InlineKeyboardButton('Пропустить', callback_data='input_art'))
+    try:
+        time = int(time)
+    except ValueError:
+        time = str(time)
+        maketrans = time.maketrans
+        time = time.translate(maketrans('.', ','))
     record_to_dict(chat_id, 'time', time)
     new_message = Message(message_text=message_text, markup=markup)
     return new_message
 
 
 def input_empty_artifacts(chat_id, artifacts):
-    message_text = 'Описание:'
+    message_text = 'Введите описание:'
     markup = ''
     record_to_dict(chat_id, 'artifacts', artifacts)
     new_message = Message(message_text=message_text, markup=markup)

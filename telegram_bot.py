@@ -1,7 +1,6 @@
 import logging
 import time
 import traceback
-from telebot.types import CallbackQuery, Message
 import telebot
 import user_state
 from telebot import apihelper
@@ -17,8 +16,7 @@ import datetime
 TOKEN = config.token
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
-apihelper.proxy = {
-        'https': f'https://lexy898:100293@34.77.252.51:3128'}
+apihelper.proxy = {'https': f'https://lexy898:100293@35.228.164.201:3128'}
 bot = telebot.TeleBot(TOKEN)
 
 
@@ -50,7 +48,7 @@ def start(message):
     """Запрос ввода номера телефона и сверка его с БД, в случае успеха: вывод шлавного меню"""
     chat_id = message.chat.id
     user_state.set_user_state(user_id=chat_id, state=CALLBACK_DATA['Старт'])
-    message_to_send = telegram_pages.start(chat_id)
+    message_to_send = telegram_pages.start()
     bot.send_message(chat_id=chat_id, text=message_to_send.message_text, reply_markup=message_to_send.markup)
 
 
@@ -105,7 +103,7 @@ def select_kind_of_activity(call):
     chat_id = call.message.chat.id
     current_user_state = user_state.get_user_state(user_id=chat_id)
     match = re.search(str(constans.REG_DATE), call.data)
-    date = datetime.datetime.strptime(match[0], '%d %m %Y').strftime('%Y-%m-%d')
+    date = datetime.datetime.strptime(match[0], '%d %m %Y').strftime('%d.%m.%Y')
     if CALLBACK_DATA['Внести трудозатраты'] == current_user_state:
         user_state.set_user_state(user_id=chat_id, state=CALLBACK_DATA["Выбрать день календаря"])
         message_to_send = telegram_pages.select_kind_of_activity(chat_id, date)
@@ -153,7 +151,6 @@ def current_project(call):
 @error_handler
 def select_as(call):
     chat_id = call.message.chat.id
-    print(chat_id)
     current_user_state = user_state.get_user_state(user_id=chat_id)
     match = re.search(str(constans.NUMERAL), call.data)
     koa_id = match[0]

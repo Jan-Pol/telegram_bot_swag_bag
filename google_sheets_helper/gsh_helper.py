@@ -12,6 +12,7 @@ def update_google_sheet(data):
         client = gspread.authorize(creds)
         sheet = client.open("data1").sheet1
         sheet.append_row(data)
+        sheet.format('A3:I1005', {'textFormat': {'bold': False, 'fontFamily': 'Georgia', 'fontSize': 10}})
     except SystemError:
         return
     return

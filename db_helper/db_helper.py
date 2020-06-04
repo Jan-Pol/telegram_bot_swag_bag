@@ -66,24 +66,21 @@ def get_type_task():
     return output
 
 
+def get_user_name_with_chat_id(chat_id):
+    fio = CertifiedUsers.get(CertifiedUsers.id == chat_id).fio
+    return fio
+
+
 def get_certified_users_dict(chat_id, number_phone):
     certified_users_dict = {}
     try:
         output = CertifiedUsers.get(CertifiedUsers.number_phone == number_phone)
     except DoesNotExist:
         return 0
-    try:
-        query = CertifiedUsers.update(id=chat_id).where(CertifiedUsers.number_phone == number_phone)
-        n = query.execute()
-    except IntegrityError:
-        query = CertifiedUsers.update(id=id).where(CertifiedUsers.id == chat_id)
-        n = query.execute()
-        query = CertifiedUsers.update(id=chat_id).where(CertifiedUsers.number_phone == number_phone)
-        n = query.execute()
-    print('# of rows updated: {}'.format(n))
-    # CertifiedUsers.update(id=chat_id).where(CertifiedUsers.number_phone == number_phone)
-    # output = CertifiedUsers.get(CertifiedUsers.number_phone == number_phone)
-    # print(output.id)
+    query = CertifiedUsers.update(id='').where(CertifiedUsers.id == chat_id)
+    query.execute()
+    query = CertifiedUsers.update(id=chat_id).where(CertifiedUsers.number_phone == number_phone)
+    query.execute()
     certified_users_dict.update({'id': chat_id,
                                  'number_phone': output.number_phone,
                                  'fio': output.fio
